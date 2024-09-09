@@ -20,7 +20,7 @@ from llama_index.core.llms.callbacks import llm_completion_callback, llm_chat_ca
 from zhipuai import ZhipuAI
 
 DEFAULT_MODEL = 'glm-4'
-ZHIPU_API_KEY = "0168e5e6e2ef53bd42e77903f3851303.GgdjBoxIUgj1HBA5"
+ZHIPU_API_KEY = "<你的智谱AI开发key>"
 
 
 def to_message_dicts(messages: Sequence[ChatMessage]) -> List:
@@ -89,15 +89,10 @@ class ChatGLM(CustomLLM):
         )
 
     def _chat(self, messages: List, stream=False) -> Any:
-        # print("--------------------------------------------")
-        # import traceback
-        # s=traceback.extract_stack()
-        # print("%s %s invoke _chat" % (s[-2],s[-2][2]))
-        # print(messages)
-        # print("--------------------------------------------")
         response = self._get_client().chat.completions.create(
             model=self.model,  # 填写需要调用的模型名称
             messages=messages,
+            stream=stream
         )
         # print(f"_chat, response: {response}")
         return response
@@ -121,11 +116,8 @@ class ChatGLM(CustomLLM):
     def stream_chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> CompletionResponseGen:
         response_txt = ""
         message_dicts: List = to_message_dicts(messages)
-        ##todo: 这里stream不起作用，因为_chat中调用zhipuai时，没有传这个参数
         response = self._chat(message_dicts, stream=True)
-        # print(f"stream_chat: {response} ")
         for chunk in response:
-            # chunk.choices[0].delta # content='```' role='assistant' tool_calls=None
             token = chunk.choices[0].delta.content
             response_txt += token
             yield ChatResponse(
@@ -135,14 +127,12 @@ class ChatGLM(CustomLLM):
     @llm_completion_callback()
     def complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
         messages = [{"role": "user", "content": prompt}]
-        # print(f"complete: messages {messages} ")
         try:
             response = self._chat(messages, stream=False)
 
             rsp = CompletionResponse(text=str(response.choices[0].message.content),
                                      raw=response,
                                      additional_kwargs=get_additional_kwargs(response), )
-            # print(f"complete: {rsp} ")
         except Exception as e:
             print(f"complete: exception {e}")
 
@@ -153,9 +143,7 @@ class ChatGLM(CustomLLM):
         response_txt = ""
         messages = [{"role": "user", "content": prompt}]
         response = self._chat(messages, stream=True)
-        # print(f"stream_complete: {response} ")
         for chunk in response:
-            # chunk.choices[0].delta # content='```' role='assistant' tool_calls=None
             token = chunk.choices[0].delta.content
             response_txt += token
             yield CompletionResponse(text=response_txt, delta=token)

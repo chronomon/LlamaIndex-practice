@@ -9,7 +9,7 @@ from llama_index.core.embeddings import BaseEmbedding
 from llama_index.core.bridge.pydantic import Field, PrivateAttr
 from zhipuai import ZhipuAI
 
-ZHIPU_API_KEY = "0168e5e6e2ef53bd42e77903f3851303.GgdjBoxIUgj1HBA5"
+ZHIPU_API_KEY = "<你的智谱AI开发key>"
 
 
 class ChatGLMEmbeddings(BaseEmbedding):
@@ -81,7 +81,7 @@ class ChatGLMEmbeddings(BaseEmbedding):
 
     def get_general_text_embedding(self, prompt: str) -> List[float]:
         response = self._get_client().embeddings.create(
-            model=self.model,  # 填写需要调用的模型名称
+            model=self.model,
             input=prompt,
         )
         return response.data[0].embedding
